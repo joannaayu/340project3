@@ -12,7 +12,7 @@ class Link_State_Node(Node):
 
     # Return a string
     def __str__(self):
-        return "Rewrite this function to define your node dump printout"
+        return "hayyyy this is our node dump :) " + "NODE ID:" + str(self.id)
 
     # Fill in this function
     def link_has_been_updated(self, neighbor, latency):
@@ -63,6 +63,10 @@ class Link_State_Node(Node):
     # Return a neighbor, -1 if no path to destination
     def get_next_hop(self, destination):
         path_map = self.dijkstra(self.graph, self.id)
+
+        print(path_map)
+
+
         if path_map[destination][1] == -1:
             return -1
 
@@ -79,8 +83,8 @@ class Link_State_Node(Node):
     def dijkstra(self, graph, start):
 
         nodes = []
-        dist_prev = []
-        visited = []
+        dist_prev = {}
+        visited = {}
         neighbors = {}
 
         edges = [*graph.keys()]
@@ -88,6 +92,7 @@ class Link_State_Node(Node):
         queue = []
         heapq.heapify(queue)
 
+        counter = 0
 
         for e in edges:
             edge = []
@@ -106,14 +111,14 @@ class Link_State_Node(Node):
                 neighbors[edge[1]].append(edge[0])
 
             if edge[0] not in nodes:
-                nodes.append(edge)
-                dist_prev.append([float('inf'), -1])
-                visited.append(False)
+                nodes.append(edge[0])
+                dist_prev[edge[0]] = [float('inf'), -1]
+                visited[edge[0]] = False
 
-            elif edge[1] not in nodes:
-                nodes.append(edge)
-                dist_prev.append([float('inf'), -1])
-                visited.append(False)
+            if edge[1] not in nodes:
+                nodes.append(edge[1])
+                dist_prev[edge[1]] = [float('inf'), -1]
+                visited[edge[1]] = False
 
         dist_prev[start] = [0, -1]
         heapq.heappush(queue, [0, start])
@@ -124,6 +129,7 @@ class Link_State_Node(Node):
 
             for n in neighbors[curr_node[1]]:
                 if visited[n] == False:
+
                     if dist_prev[curr_node[1]][0] + graph[frozenset([curr_node[1], n])]["cost"] < dist_prev[n][0]:
 
                         dist_prev[n] = [dist_prev[curr_node[1]][0] + graph[frozenset([curr_node[1], n])]["cost"], curr_node[1]]
