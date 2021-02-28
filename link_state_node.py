@@ -5,10 +5,8 @@ import heapq
 class Link_State_Node(Node):
     def __init__(self, id):
         super().__init__(id)
-
         #creating a graph that keys edges to dictionary of cost and seq_num
         self.graph = {}
-
 
     # Return a string
     def __str__(self):
@@ -63,9 +61,6 @@ class Link_State_Node(Node):
     # Return a neighbor, -1 if no path to destination
     def get_next_hop(self, destination):
         path_map = self.dijkstra(self.graph, self.id)
-
-        print(path_map)
-
 
         if path_map[destination][1] == -1:
             return -1
