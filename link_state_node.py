@@ -10,7 +10,7 @@ class Link_State_Node(Node):
 
     # Return a string
     def __str__(self):
-        return "hayyyy this is our node dump :) " + "NODE ID:" + str(self.id)
+        return "hayyyy this is our node dump :) "
 
     # Fill in this function
     def link_has_been_updated(self, neighbor, latency):
@@ -54,8 +54,6 @@ class Link_State_Node(Node):
             json_msg = json.dumps(curr_msg)
 
             self.send_to_neighbors(json_msg)
-
-
 
 
     # Return a neighbor, -1 if no path to destination
