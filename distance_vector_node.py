@@ -54,7 +54,7 @@ class Distance_Vector_Node(Node):
 
                     self.router_dv[node]["cost"] = float('inf')
                     is_updated = True
-                    self.router_dv[node]["path"] = []
+                    # self.router_dv[node]["path"] = []
 
                     #updates the node if it is a neighbor because there is a sure pathway
                     if neighbor in self.neighbors:
@@ -118,6 +118,12 @@ class Distance_Vector_Node(Node):
         broken_path = []
 
         #accounts for timing errors and only gets ones sent latest
+
+        print("INCOMING PACKET TIME", self.seq_nums)
+
+        print("OWN PACKET UPDATED", src_seq_num)
+
+
         if src_node not in self.seq_nums or src_seq_num > self.seq_nums[src_node]:
 
             # print("THIS IS SRC NODE", src_node)
@@ -160,7 +166,12 @@ class Distance_Vector_Node(Node):
                 #accounting for a new node added and not inf
                 if node not in self.router_dv and src_dv[node]["cost"] != float('inf'):
                     new_cost = src_dv[node]["cost"] + self.neighbor_cost_dv[src_node]
-                    new_path = [self.id, src_node, node]
+
+                    new_path = [self.id]
+
+                    for i in src_dv[node]["path"]:
+                        new_path.append(i)
+
                     self.router_dv[node] = {"cost": new_cost, "path": new_path}
                     is_updated = True
                 #
@@ -299,7 +310,7 @@ class Distance_Vector_Node(Node):
                                                 for n in self.neighbors_dv[neigh]:
                                                     if (frozenset(bad_path).issubset(frozenset(self.neighbors_dv[neigh][n]["path"]))) == True:
                                                         self.neighbors_dv[neigh][n]["cost"] = float('inf')
-                                                        self.neighbors_dv[neigh][n]["cost"] = []
+                                                        # self.neighbors_dv[neigh][n]["path"] = []
 
 
 
@@ -324,7 +335,7 @@ class Distance_Vector_Node(Node):
                                     for n in self.neighbors_dv[neigh]:
                                         if (frozenset(bad_path).issubset(frozenset(self.neighbors_dv[neigh][n]["path"]))) == True:
                                             self.neighbors_dv[neigh][n]["cost"] = float('inf')
-                                            self.neighbors_dv[neigh][n]["cost"] = []
+                                            # self.neighbors_dv[neigh][n]["path"] = []
 
 
 
@@ -384,20 +395,20 @@ class Distance_Vector_Node(Node):
 
         is_recalc = False
 
-        if is_updated == False:
+        # if is_updated == False:
 
-            dv = copy.deepcopy(self.router_dv)
+        dv = copy.deepcopy(self.router_dv)
 
-            self.router_dv = self.bellman_ford(dv)[0]
+        self.router_dv = self.bellman_ford(dv)[0]
 
-
-            is_recalc = self.bellman_ford(dv)[1]
+        is_recalc = self.bellman_ford(dv)[1]
 
         updated_dv_msg = {"src": self.id, "dv": self.router_dv, "seq_num": self.get_time(), "neighbors": self.neighbors_dv}
 
         # print("THIS IS BELLMAN FORD RESULT", self.router_dv)
 
         if is_updated or is_recalc == True:
+
             json_msg = json.dumps(updated_dv_msg)
 
             self.send_to_neighbors(json_msg)
@@ -419,6 +430,11 @@ class Distance_Vector_Node(Node):
         neighbors_holder = copy.deepcopy(self.neighbors)
         neighbors_dv_holder = copy.deepcopy(self.neighbors_dv)
 
+        for node in dv:
+            if dv[node]["cost"] == float('inf') and node in self.neighbor_cost_dv:
+                dv[node]["cost"] = self.neighbor_cost_dv[node]
+                dv[node]["path"] = [self.id, node]
+
 
         for neighbor in neighbors_holder:
             for node in neighbors_dv_holder[neighbor]:
@@ -438,11 +454,6 @@ class Distance_Vector_Node(Node):
 
                     #
                     #     dv[neighbor]["path"] = [self.id, neighbor]
-
-
-
-
-
 
                     if self.neighbors_dv[neighbor][node]["cost"] + dv[neighbor]["cost"] < dv[node]["cost"]:
                         if (frozenset(self.neighbors_dv[neighbor][node]["path"]).issubset(frozenset(dv[node]["path"]))) == False:
@@ -471,39 +482,34 @@ class Distance_Vector_Node(Node):
 
                             print("HOPEFULLY THIS IS THE RIGHT PATH OTHERWISE I WILL DIE", new_path)
 
-                            # if self.neighbors_dv[neighbor][node]["path"][0] == node:
-                            #     self.neighbors_dv[neighbor][node]["path"].reverse()
-                            #     dv[node]["path"] = dv[node]["path"] + self.neighbors_dv[neighbor][node]["path"]
-                            #
-                            #
-                            # else:
-                            # dv[node]["path"] = dv[node]["path"] + self.neighbors_dv[neighbor][node]["path"]
-                            # dv[node]["path"] = list(set(dv[node]["path"]))
-                            #
-                            # print("NEW PATH", dv[node]["path"])
-                            #
-                            #
-                            # broken_path = dv[node]["path"]
-                            # if len(broken_path) != 0:
-                            #     for neigh in self.neighbors_dv:
-                            #         for n in self.neighbors_dv[neigh]:
-                            #             if (frozenset(broken_path).issubset(frozenset(self.neighbors_dv[neigh][n]["path"]))) == True:
-                            #
-                            #                 # if broken_path == []:
-                            #                 #     continue
-                            #                 # print("THIS IS NEIGH", neigh)
-                            #                 # print("THIS IS n", n)
-                            #                 print("THIS IS BROKEN PATH", broken_path)
-                            #                 print("THIS IS PATH",self.neighbors_dv[neigh][n]["path"])
-                            #
-                            #                 self.neighbors_dv[neigh][n]["cost"] = float('inf')
-                            #                 self.neighbors_dv[neigh][n]["path"] = []
+
+                            broken_path = dv[node]["path"]
+
+                            if len(broken_path) != 0:
+                                for neigh in self.neighbors_dv:
+                                    for n in self.neighbors_dv[neigh]:
+                                        if (frozenset(broken_path).issubset(frozenset(self.neighbors_dv[neigh][n]["path"]))) == True:
+
+                                            # if broken_path == []:
+                                            #     continue
+                                            # print("THIS IS NEIGH", neigh)
+                                            # print("THIS IS n", n)
+                                            print("THIS IS BROKEN PATH", broken_path)
+                                            print("THIS IS PATH",self.neighbors_dv[neigh][n]["path"])
+
+                                            self.neighbors_dv[neigh][n]["cost"] = float('inf')
+
+                                            # self.neighbors_dv[neigh][n]["path"] =
 
 
 
+                            is_recalc = True
 
                             # print("AFTER PATH IS UPDATED", dv[node]["path"])
-                            is_recalc = True
+
+
+
+
 
         print("BELLMAN FORD RECALCULATED_DV", dv)
         # print()
